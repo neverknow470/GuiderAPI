@@ -34,6 +34,11 @@ namespace Api
             public string ECONTACT { get; set; }
             public string EPHONE { get; set; }
             public string STATUS { get; set; }
+            public string AREAID { get; set; }
+            public string LEVEL { get; set; }
+            public string COL1 { get; set; }
+            public string COL2 { get; set; }
+            public string COL3 { get; set; }
             public string MESSAGE { get; set; }
         }
         public class BODYINFO
@@ -73,10 +78,16 @@ namespace Api
             public string SDATE { get; set; }
             public string EDATE { get; set; }
         }
-
+        public class BASICINFO
+        {
+            public string CARDID { get; set; }
+            public string HEIGHT { get; set; }
+            public string WEIGHT { get; set; }
+            public string BMI { get; set; }
+        }
 
         [HttpGet]
-        public string SendCardId(string CARDID)
+        public ReturnMsg SendCardId(string CARDID)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -119,10 +130,10 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return JsonConvert.SerializeObject(msg, Formatting.None);
+            return msg;
         }
         [HttpPost]
-        public HttpResponseMessage SendUserInfo(JObject json)
+        public ReturnMsg SendUserInfo(JObject json)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -145,6 +156,10 @@ namespace Api
                     GENDER = json["GENDER"].ToString(),
                     ISSUEDDATE = json["ISSUEDDATE"].ToString(),
                     //ECONTACT = json["ECONTACT"].ToString()
+                    AREAID = json["AREAID"].ToString(),
+                    COL1 = json["COL1"].ToString(),
+                    COL2 = json["COL2"].ToString(),
+                    COL3 = json["COL3"].ToString()
                 };//{"CARDID":"223456789","USERNAME":"ABC543","ID":"F123456789","BIRTHDAY":"19851029","GENDER":"M","ISSUEDDATE":"2018/08/22"}
                 msg.CARDID = user.CARDID;
                 msg.USERNAME = user.USERNAME;
@@ -169,8 +184,8 @@ namespace Api
                         else
                         {
                             string USERID = GetUSERID();
-                            command.CommandText = @"INSERT INTO USERINFO(USERID,USERNAME,ID,PASSWORD,BIRTHDAY,GENDER,ISSUEDDATE,CDATE,MDATE,STATUS) 
-                            values('" + USERID + "','" + user.USERNAME + "','" + user.ID + "','" + user.PASSWORD + "','" + user.BIRTHDAY + "','" + user.GENDER + "','" + user.ISSUEDDATE + "',NOW(),NOW(),1)";
+                            command.CommandText = @"INSERT INTO USERINFO(USERID,USERNAME,ID,PASSWORD,BIRTHDAY,GENDER,ISSUEDDATE,CDATE,MDATE,STATUS,LEVEL,AREAID,COL1,COL2,COL3) 
+                            values('" + USERID + "','" + user.USERNAME + "','" + user.ID + "','" + user.PASSWORD + "','" + user.BIRTHDAY + "','" + user.GENDER + "','" + user.ISSUEDDATE + "',NOW(),NOW(),1,1,'" + user.AREAID + "','" + user.COL1 + "','" + user.COL2 + "','" + user.COL3 + "')";
                             command.ExecuteNonQuery();
                             command.CommandText = "UPDATE CARDLIST SET USERID='" + USERID + "' WHERE CARDID='" + user.CARDID + "'";
                             command.ExecuteNonQuery();
@@ -196,7 +211,7 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(msg, Formatting.None));
+            return msg;
         }
         private string GetUSERID()
         {
@@ -204,7 +219,7 @@ namespace Api
             MySqlConnection conn = new MySqlConnection(connStr);
             MySqlCommand command = conn.CreateCommand();
             conn.Open();
-            command.CommandText = "SELECT MAX(USERID) FROM USERINFO";
+            command.CommandText = "SELECT MAX(USERID) FROM USERINFO  WHERE USERID LIKE 'U%'";
             DataTable DT = new DataTable();
             MySqlDataAdapter MDA = new MySqlDataAdapter(command.CommandText, conn);
             MDA.Fill(DT);
@@ -290,7 +305,7 @@ namespace Api
         }
 
         [HttpPost]
-        public HttpResponseMessage SendBPInfo(JObject json)
+        public ReturnMsg SendBPInfo(JObject json)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -309,7 +324,8 @@ namespace Api
                     DBP = json["DBP"].ToString(),
                     SBP = json["SBP"].ToString(),
                     HB = json["HB"].ToString(),
-                    PU = json["PU"].ToString()
+                    PU = "0"
+                    //PU = json["PU"].ToString()
                 };
                 msg.CARDID = BLOODPRESSURE.CARDID;
                 conn.Open();
@@ -340,11 +356,11 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(msg, Formatting.None));
+            return msg;
         }
 
         [HttpPost]
-        public HttpResponseMessage SendBSInfo(JObject json)
+        public ReturnMsg SendBSInfo(JObject json)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -378,7 +394,6 @@ namespace Api
                 }
                 else
                 {
-
                     command.CommandText = "INSERT INTO BLOODSUGAR(USERID,BS,CDATE) values('" + BLOODSUGAR.CARDID + "'," + BLOODSUGAR.BS + ",NOW())";
                     msg.MESSAGE = "INSERT SUCCESSFUL";
                     command.ExecuteNonQuery();
@@ -391,11 +406,11 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(msg, Formatting.None));
+            return msg;
         }
 
         [HttpPost]
-        public HttpResponseMessage SendBTInfo(JObject json)
+        public ReturnMsg SendBTInfo(JObject json)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -442,11 +457,11 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(msg, Formatting.None));
+            return msg;
         }
 
         [HttpPost]
-        public HttpResponseMessage SendBOInfo(JObject json)
+        public ReturnMsg SendBOInfo(JObject json)
         {
             ReturnMsg msg = new ReturnMsg
             {
@@ -492,11 +507,63 @@ namespace Api
                 msg.STATUS = "500";
                 msg.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(msg, Formatting.None));
+            return msg;
+        }
+
+        [HttpPost]
+        public ReturnMsg SendBIInfo(JObject json)
+        {
+            ReturnMsg msg = new ReturnMsg
+            {
+                STATUS = "",
+                CARDID = "",
+                USERNAME = "",
+                MESSAGE = ""
+            };
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(connStr);
+                MySqlCommand command = conn.CreateCommand();
+                BASICINFO BASICINFO = new BASICINFO
+                {
+                    CARDID = json["CARDID"].ToString(),
+                    HEIGHT = json["HEIGHT"].ToString(),
+                    WEIGHT = json["WEIGHT"].ToString(),
+                    BMI = json["BMI"].ToString()
+                };
+                msg.CARDID = BASICINFO.CARDID;
+                conn.Open();
+                command.CommandText = "select * from cardlist C left join userinfo U on C.USERID=U.USERID WHERE CARDID='" + BASICINFO.CARDID + "'";
+                DataTable DT = new DataTable();
+                DataTable DTb = new DataTable();
+                MySqlDataAdapter MDA = new MySqlDataAdapter(command.CommandText, conn);
+                MDA.Fill(DT);
+                if (DT != null && DT.Rows.Count > 0 && DT.Rows[0]["USERID"].ToString() != "")
+                {
+                    msg.USERNAME = DT.Rows[0]["USERNAME"].ToString() == "" ? "使用者" : DT.Rows[0]["USERNAME"].ToString();
+                    command.CommandText = "INSERT INTO BASICINFO(USERID,HEIGHT,WEIGHT,BMI,CDATE) values('" + DT.Rows[0]["USERID"].ToString() + "'," + BASICINFO.HEIGHT + "," + BASICINFO.WEIGHT + "," + BASICINFO.BMI + ",NOW())";
+                    msg.MESSAGE = "INSERT SUCCESSFUL";
+                    command.ExecuteNonQuery();
+                }
+                else
+                {
+                    command.CommandText = "INSERT INTO BASICINFO(USERID,HEIGHT,WEIGHT,BMI,CDATE) values('" + BASICINFO.CARDID + "'," + BASICINFO.HEIGHT + "," + BASICINFO.WEIGHT + "," + BASICINFO.BMI + ",NOW())";
+                    msg.MESSAGE = "INSERT SUCCESSFUL";
+                    command.ExecuteNonQuery();
+                }
+                conn.Close();
+                msg.STATUS = "200";
+            }
+            catch (Exception EX)
+            {
+                msg.STATUS = "500";
+                msg.MESSAGE = EX.Message;
+            }
+            return msg;
         }
 
         [HttpGet]
-        public HttpResponseMessage GetUserInfo(string CARDID)
+        public USERINFO GetUserInfo(string CARDID)
         {
             USERINFO userinfo = new USERINFO
             {
@@ -509,6 +576,11 @@ namespace Api
                 PHONE = "",
                 ECONTACT = "",
                 EPHONE = "",
+                AREAID = "",
+                LEVEL = "",
+                COL1 = "",
+                COL2 = "",
+                COL3 = "",
                 STATUS = "200",
                 MESSAGE = "Search Success"
             };
@@ -531,6 +603,11 @@ namespace Api
                     userinfo.PHONE = DT.Rows[0]["PHONE"].ToString();
                     userinfo.ECONTACT = DT.Rows[0]["ECONTACT"].ToString();
                     userinfo.EPHONE = DT.Rows[0]["EPHONE"].ToString();
+                    userinfo.AREAID = DT.Rows[0]["AREAID"].ToString();
+                    userinfo.LEVEL = DT.Rows[0]["LEVEL"].ToString();
+                    userinfo.COL1 = DT.Rows[0]["COL1"].ToString();
+                    userinfo.COL2 = DT.Rows[0]["COL2"].ToString();
+                    userinfo.COL3 = DT.Rows[0]["COL3"].ToString();
                 }
                 conn.Close();
             }
@@ -539,11 +616,11 @@ namespace Api
                 userinfo.STATUS = "500";
                 userinfo.MESSAGE = EX.Message;
             }
-            return Request.CreateResponse(JsonConvert.SerializeObject(userinfo, Formatting.None));
+            return userinfo;
         }
 
         [HttpPost]
-        public HttpResponseMessage GetBodyInfo(JObject json)
+        public dynamic GetBodyInfo(JObject json)
         {
             SearchCondition sc = new SearchCondition
             {
@@ -573,7 +650,22 @@ namespace Api
                 if (DT != null && DT.Rows.Count > 0 && DT.Rows[0]["USERID"].ToString() != "")
                 {
                     DT.Columns.Remove("USERID");
-                    bodyinfo.BODY = JsonConvert.SerializeObject(DT, Formatting.None);
+                    List<dynamic> bodylist = new List<dynamic>();
+                    dynamic bodydetail = new JObject();
+                    foreach (DataRow row in DT.Rows)
+                    {
+                        switch (sc.BODYTYPE)
+                        {
+                            case "BLOODPRESSURE":
+                                bodydetail.DBP = row["DBP"].ToString();
+                                bodydetail.SBP = row["SBP"].ToString();
+                                bodydetail.HB = row["HB"].ToString();
+                                bodydetail.CDATE = row["CDATE"].ToString();
+                                break;
+                        }
+                        bodylist.Add(bodydetail);
+                    }
+                    bodyinfo.BODY = JsonConvert.SerializeObject(bodylist, Formatting.None);
                 }
                 conn.Close();
             }
@@ -582,8 +674,79 @@ namespace Api
                 bodyinfo.STATUS = "500";
                 bodyinfo.MESSAGE = EX.Message;
             }
-            string Result = bodyinfo.ToString(Formatting.None);
-            return Request.CreateResponse(Result);
+            return bodyinfo;
+        }
+
+        [HttpPost]
+        public ReturnMsg SetCardIdBelong(JObject json)
+        {
+            ReturnMsg msg = new ReturnMsg
+            {
+                STATUS = "",
+                CARDID = json["TCARDID"].ToString(),
+                USERNAME = "",
+                MESSAGE = ""
+            };
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(connStr);
+                MySqlCommand command = conn.CreateCommand();
+                conn.Open();
+                command.CommandText = "SELECT * FROM CARDLIST WHERE CARDID='" + msg.CARDID + "'";
+                DataTable DT = new DataTable();
+                MySqlDataAdapter MDA = new MySqlDataAdapter(command.CommandText, conn);
+                MDA.Fill(DT);
+                if (DT != null && DT.Rows.Count > 0)
+                {
+                    if (DT.Rows[0]["USERID"].ToString() == "")
+                    {
+                        command.CommandText = "SELECT * FROM CARDLIST WHERE CARDID='" + json["MCARDID"].ToString() + "'";
+                        MDA = new MySqlDataAdapter(command.CommandText, conn);
+                        DT = new DataTable();
+                        MDA.Fill(DT);
+                        if (DT != null && DT.Rows.Count > 0)
+                        {
+                            command.CommandText = "UPDATE CARDLIST SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE CARDID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            command.CommandText = "UPDATE BASICINFO SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE USERID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            command.CommandText = "UPDATE BLOODPRESSURE SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE USERID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            command.CommandText = "UPDATE BLOODOXYGEN SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE USERID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            command.CommandText = "UPDATE BLOODSUGAR SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE USERID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            command.CommandText = "UPDATE BODYTEMP SET USERID='" + DT.Rows[0]["USERID"].ToString() + "' WHERE USERID='" + msg.CARDID + "'";
+                            command.ExecuteNonQuery();
+                            msg.STATUS = "200";
+                            msg.MESSAGE = "UPDATE SUCCESSFUL";
+                        }
+                        else
+                        {
+                            msg.STATUS = "500";
+                            msg.MESSAGE = "MCARDID NOT EXIST";
+                        }
+                    }
+                    else
+                    {
+                        msg.STATUS = "500";
+                        msg.MESSAGE = "TCARDID ALREADY BELONG";
+                    }
+                }
+                else
+                {
+                    msg.STATUS = "500";
+                    msg.MESSAGE = "TCARDID NOT EXIST";
+                }
+                conn.Close();
+
+            }
+            catch (Exception EX)
+            {
+                msg.STATUS = "500";
+                msg.MESSAGE = EX.Message;
+            }
+            return msg;
         }
     }
 }
